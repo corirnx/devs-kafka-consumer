@@ -26,12 +26,6 @@ coverage
 # nyc test coverage
 .nyc_output
 
-# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
-.grunt
-
-# Bower dependency directory (https://bower.io/)
-bower_components
-
 # node-waf configuration
 .lock-wscript
 
@@ -47,6 +41,7 @@ web_modules/
 
 # TypeScript cache
 *.tsbuildinfo
+next-env.d.ts
 
 # Optional npm cache directory
 .npm
@@ -68,9 +63,6 @@ web_modules/
 
 # Output of 'npm pack'
 *.tgz
-
-# Yarn Integrity file
-.yarn-integrity
 
 # dotenv environment variable files
 .env
@@ -97,21 +89,12 @@ dist
 # https://nextjs.org/blog/next-9-1#public-directory-support
 # public
 
-# vuepress build output
-.vuepress/dist
-
 # vuepress v2.x temp and cache directory
 .temp
 .cache
 
-# Docusaurus cache and generated files
-.docusaurus
-
 # Serverless directories
 .serverless/
-
-# FuseBox cache
-.fusebox/
 
 # DynamoDB Local files
 .dynamodb/
@@ -122,9 +105,4 @@ dist
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
-# yarn v2
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
 .pnp.*
