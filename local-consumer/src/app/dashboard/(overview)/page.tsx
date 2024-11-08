@@ -1,3 +1,5 @@
+import ConsumerViewer from "../consumer/page";
+
 export default function Page() {
 
     return (
@@ -6,7 +8,7 @@ export default function Page() {
                 Local Consumer
             </h1>
             <div className="flex mr-auto ml-auto justify-center">
-                <p>hello!</p>
+                <ConsumerViewer />
             </div>
         </main>
     );
