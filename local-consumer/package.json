@@ -6,17 +6,25 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
+    "@types/jest": "^29.5.14",
     "cloudevents": "^8.0.2",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "kafkajs": "^2.2.4",
     "next": "15.0.1",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/node": "^20.17.1",
