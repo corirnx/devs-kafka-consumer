@@ -56,7 +56,7 @@ export default function ConsumerViewer() {
                 Local Consumer
             </h1>
             <div className="flex mr-auto ml-auto justify-center">
-                <div className="flex h-full flex-col px-3 py-4 md:px-2">
+                <div className="flex h-full flex-col px-3 py-4 md:px-2 w-full">
                     <div className="p-4 bg-gray-300 dark:bg-gray-700 rounded-lg h-max-96 overflow-y-auto">
                         <div className="flex items-start gap-2">
                             <InputField placeholder="host" name="inputHost" ref={refHost} />
