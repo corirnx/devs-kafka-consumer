@@ -58,7 +58,7 @@ export default function ConsumerViewer() {
             <div className="flex mr-auto ml-auto justify-center">
                 <div className="flex h-full flex-col px-3 py-4 md:px-2 w-full">
                     <div className="p-4 bg-gray-300 dark:bg-gray-700 rounded-lg h-max-96 overflow-y-auto">
-                        <div className="flex items-start gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <InputField placeholder="host" name="inputHost" ref={refHost} />
                             <InputField placeholder="topic name" name="inputTopic" ref={refTopic} />
                             <InputField placeholder="consumer group id" name="inputConsumerGroupId" ref={refConsumerId} />
@@ -72,16 +72,15 @@ export default function ConsumerViewer() {
                             </Link>
                         </div>
                         <div className="flex items-start gap-2 mt-2">
-                            <h4 className="font-bold">Response</h4>
-                            <ul className="overflow-auto w-auto">
-                                <Suspense fallback={<LoadingCircle />}>
-                                    {loading ? (
-                                        <li className="">
-                                            <LoadingCircle />
-                                        </li>
-                                    ) : (
-                                        <>
-                                            <li className="font-semibold">{consumerResponse.status}</li>
+
+                            <Suspense fallback={<LoadingCircle />}>
+                                {loading ? (
+                                    <LoadingCircle />
+                                ) : (
+                                    <div>
+                                        <h4 className="font-semibold">Response</h4>
+                                        <ul className="overflow-auto w-auto">
+                                            <li className="">{consumerResponse.status}</li>
                                             {consumerResponse.error ? (
                                                 <li>
                                                     <pre>{consumerResponse.error}</pre>
@@ -93,19 +92,17 @@ export default function ConsumerViewer() {
                                                     </li>
                                                 ))
                                             )}
-                                        </>
-                                    )}
-                                </Suspense>
-                            </ul>
+                                        </ul>
+                                    </div>
+                                )}
+                            </Suspense>
+
                         </div>
                     </div>
                 </div>
             </div>
 
         </div>
-
-
-
 
     );
 }

@@ -12,7 +12,7 @@ const InputField = forwardRef<HTMLInputElement, InputFieldProps>(({ placeholder,
             name={name}
             placeholder={placeholder}
             ref={ref}
-            className="gap-2 mb-2 h-10 sm:h-12 px-4 sm:px-5 py-2 pl-10 ml-0 max-w-96 w-full 
+            className="gap-2 mb-2 h-10 sm:h-12 px-4 sm:px-5 py-2 pl-10 ml-0 w-full 
             border border-gray-200 outline-2 border-solid border-transparent transition-colors 
             flex items-center justify-left peer rounded-md bg-foreground text-background           
             hover:bg-[#383838] dark:hover:bg-green-100 
