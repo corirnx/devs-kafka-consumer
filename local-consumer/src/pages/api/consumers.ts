@@ -1,103 +1,65 @@
-import { ConsumerResponse } from "@/lib/types";
+import { createKafka } from "@/lib/kafkaProvider";
+import { validateRequest } from "@/lib/requestValidator";
 import {
-  EachBatchPayload,
-  EachMessagePayload,
-  IHeaders,
-  Kafka,
-  logLevel,
-} from "kafkajs";
+  ConsumedMessage as CollectedMessage,
+  ConsumerPayload,
+  ConsumerResponse,
+} from "@/lib/types";
+import { EachMessagePayload, IHeaders, KafkaMessage } from "kafkajs";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "POST") {
-    const resultObj: ConsumerResponse = {
-      status: "Consume failed",
-      data: [],
-      error: "Method Not Allowed",
-    };
-    res.status(405).json(resultObj);
+  res = validateRequest(req, res);
+  if (res.statusCode !== 200) {
     return;
   }
+  await consumeMessages(req.body as ConsumerPayload, res);
+}
 
-  const { host, topic, consumerGroupId } = req.body;
-  if (!host || !topic || !consumerGroupId) {
-    const resultObj: ConsumerResponse = {
-      status: "Bad Request: Missing required fields",
-      data: [],
-      error: "Invalid request",
-    };
-    return res.status(400).json(resultObj);
-  }
-
-  const messages: any[] = []; // Array to collect messages
+async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
+  const collectedMessages: CollectedMessage[] = [];
   let consumer;
 
   try {
-    const kafka = createKafka(host);
+    const kafka = createKafka(payload.host);
+    consumer = kafka.consumer({ groupId: payload.consumerGroupId as string });
 
-    consumer = kafka.consumer({ groupId: consumerGroupId as string });
     await consumer.connect();
     await consumer.subscribe({
-      topic: topic,
+      topic: payload.topic,
       fromBeginning: true,
     });
 
-    // await consumer.run({
-    //   eachMessage: async ({
-    //     topic,
-    //     partition,
-    //     message,
-    //   }: EachMessagePayload) => {
-    //     console.trace(topic, partition, message.timestamp);
-    //     const consumedObject = JSON.parse(message.value!.toString());
-    //     // Convert headers to human-readable format
-    //     if (message.headers) {
-    //       const header = extractMessageHeaders(message.headers);
-    //       messages.push({
-    //         header: header,
-    //         message: consumedObject,
-    //       });
-    //     } else {
-    //       messages.push({ message: consumedObject });
-    //     }
-    //   },
-    // });
-
     await consumer.run({
-      eachBatch: async ({ batch }: EachBatchPayload) => {
-        for (const message of batch.messages) {
-          const consumedObject = JSON.parse(message.value!.toString());
-          if (message.headers) {
-            const header = extractMessageHeaders(message.headers);
-            messages.push({ header: header, message: consumedObject });
-          } else {
-            messages.push({ message: consumedObject });
-          }
-        }
+      eachMessage: async ({
+        topic,
+        partition,
+        message,
+      }: EachMessagePayload) => {
+        console.trace(topic, partition, message.timestamp);
+        handleMessage(collectedMessages, message);
       },
     });
 
     // Simulate a delay to allow the consumer to process the message
     await new Promise((resolve) => setTimeout(resolve, 10000));
 
-    const resultObj: ConsumerResponse = {
+    res.status(200).json({
       status: `${new Date().toLocaleTimeString()} | ${
-        messages.length
+        collectedMessages.length
       } Messages consumed.`,
-      data: messages.slice(0, 10),
+      data: collectedMessages,
       error: "",
-    };
-    res.status(200).json(resultObj);
+    } as ConsumerResponse);
   } catch (e: any) {
-    const resultObj: ConsumerResponse = {
+    res.status(500).json({
       status: "Failed to consume messages",
       data: [],
       error: e.message,
-    };
-    res.status(500).json(resultObj);
+    } as ConsumerResponse);
   } finally {
     try {
       if (consumer) {
@@ -111,30 +73,44 @@ export default async function handler(
 
 function extractMessageHeaders(headers: IHeaders): Record<string, string> {
   const humanReadableHeaders: Record<string, string> = {};
+  // Convert headers to human-readable format
   for (const [key, value] of Object.entries(headers)) {
     humanReadableHeaders[key] = value!.toString();
   }
-  //console.trace("Headers:", humanReadableHeaders);
   return humanReadableHeaders;
 }
 
-export function createKafka(host: string): Kafka {
-  const username = process.env.KAFKA_USERNAME || "";
-  const password = process.env.KAFKA_PASSWORD || "";
-  const brokers = host.split(",") || [];
+export function handleMessage(
+  collectedMessages: CollectedMessage[],
+  message: KafkaMessage
+): CollectedMessage[] {
+  const consumedMessage = JSON.parse(message.value!.toString());
+  ensureLatestMessage(collectedMessages, consumedMessage);
 
-  const kafka = new Kafka({
-    clientId: process.env.KAFKA_CLIENT_ID,
-    brokers: brokers,
-    logLevel: logLevel.INFO,
-    sasl: {
-      mechanism: "plain",
-      username: username,
-      password: password,
-    },
-    ssl: true,
-    connectionTimeout: 30000,
-  });
+  if (message.headers) {
+    const header = extractMessageHeaders(message.headers);
+    collectedMessages.push({
+      header: header,
+      message: consumedMessage,
+    } as CollectedMessage);
+  } else {
+    collectedMessages.push({ message: consumedMessage } as CollectedMessage);
+  }
 
-  return kafka;
+  return collectedMessages;
+}
+
+export function ensureLatestMessage(
+  collectedMessages: CollectedMessage[],
+  consumedMessage: Record<string, unknown>
+) {
+  const index = collectedMessages.findIndex(
+    (msg) => JSON.stringify(msg.message) === JSON.stringify(consumedMessage)
+  );
+
+  if (index !== -1) {
+    collectedMessages.splice(index, 1);
+  }
+
+  return collectedMessages;
 }
