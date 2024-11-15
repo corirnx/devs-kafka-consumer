@@ -7,6 +7,7 @@ import { Suspense, useRef, useState } from "react";
 import { ConsumerResponse, ConsumerPayload } from "@/lib/types";
 import InputField from "@/app/ui/text-input";
 import LoadingCircle from "@/app/ui/loading";
+import CollapsibleJsonItem from "@/app/ui/collapsibleJsonItem";
 
 
 export default function ConsumerViewer() {
@@ -135,9 +136,7 @@ export default function ConsumerViewer() {
                                                 </li>
                                             ) : (
                                                 consumerResponse.data?.map((item, index) => (
-                                                    <li key={index}>
-                                                        <pre>{JSON.stringify(item, null, 2)}</pre>
-                                                    </li>
+                                                    <CollapsibleJsonItem data={item} key={index} />
                                                 ))
                                             )}
                                         </ul>
