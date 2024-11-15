@@ -39,7 +39,7 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
         partition,
         message,
       }: EachMessagePayload) => {
-        console.trace(topic, partition, message.timestamp);
+        //console.trace(topic, partition, message.timestamp);
         handleMessage(collectedMessages, message);
       },
     });
