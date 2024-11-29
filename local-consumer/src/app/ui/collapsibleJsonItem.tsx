@@ -16,10 +16,20 @@ const CollapsibleJsonItem: React.FC<CollapsibleJsonItemProps> = ({ data }) => {
         <div>
             <div className="flex items-start">
                 <button onClick={toggleCollapse}
-                    className="text-green-500 underline flex items-center">
+                    className=" underline flex items-center">
                     {collapsed
-                        ? <span className='flex items-center' role='expand'><ChevronRightIcon className="h-5 w-5" />expand</span>
-                        : <span className='flex items-center' role='collapse'><ChevronDownIcon className="h-5 w-5" />collapse</span>}
+                        ? <span className='flex items-center' role='expand'>
+                            <ChevronRightIcon className="h-5 w-5 text-green-500 font-bold" />
+                            <div className='hover:font-bold'>
+                                expand
+                            </div>
+                        </span>
+                        : <span className='flex items-center' role='collapse'>
+                            <ChevronDownIcon className="h-5 w-5 text-green-500 font-bold" />
+                            <div className='hover:font-bold'>
+                                collapse
+                            </div>
+                        </span>}
                 </button>
 
             </div>
