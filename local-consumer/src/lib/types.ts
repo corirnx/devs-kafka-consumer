@@ -12,5 +12,9 @@ export interface ConsumerPayload {
 
 export interface ConsumedMessage {
   header?: Record<string, string>;
+  key: string;
+  offset: number;
+  size?: string;
+  timestamp: number;    
   message: Record<string, unknown>;
 }

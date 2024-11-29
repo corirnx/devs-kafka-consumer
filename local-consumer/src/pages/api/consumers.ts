@@ -1,7 +1,7 @@
 import { createKafka } from "@/lib/kafkaProvider";
 import { validateRequest } from "@/lib/requestValidator";
 import {
-  ConsumedMessage as CollectedMessage,
+  ConsumedMessage,
   ConsumerPayload,
   ConsumerResponse,
 } from "@/lib/types";
@@ -20,7 +20,7 @@ export default async function handler(
 }
 
 async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
-  const collectedMessages: CollectedMessage[] = [];
+  const collectedMessages: ConsumedMessage[] = [];
   let consumer;
 
   try {
@@ -39,7 +39,7 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
         partition,
         message,
       }: EachMessagePayload) => {
-        //console.trace(topic, partition, message.timestamp);
+        //console.log(topic, partition, message.timestamp);
         handleMessage(collectedMessages, message);
       },
     });
@@ -71,45 +71,68 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
   }
 }
 
-function extractMessageHeaders(headers: IHeaders): Record<string, string> {
+function extractMessageHeaders(
+  headers: IHeaders | undefined
+): Record<string, string> {
   const humanReadableHeaders: Record<string, string> = {};
-  // Convert headers to human-readable format
-  for (const [key, value] of Object.entries(headers)) {
-    humanReadableHeaders[key] = value!.toString();
+  if (headers) {
+    for (const [key, value] of Object.entries(headers)) {
+      humanReadableHeaders[key] = value!.toString();
+    }
   }
   return humanReadableHeaders;
 }
 
 export function handleMessage(
-  collectedMessages: CollectedMessage[],
+  collectedMessages: ConsumedMessage[],
   message: KafkaMessage
-): CollectedMessage[] {
+): ConsumedMessage[] {
   const consumedMessage = JSON.parse(message.value!.toString());
+  try {
+    console.log(message.key);
+    const keyString = message.key!.toString("utf8");
+    console.log(keyString);
+  } catch (e) {
+    console.log(message.key);
+    console.log(e);
+  }
+
   ensureLatestMessage(collectedMessages, consumedMessage);
 
-  if (message.headers) {
-    const header = extractMessageHeaders(message.headers);
-    collectedMessages.push({
-      header: header,
-      message: consumedMessage,
-    } as CollectedMessage);
-  } else {
-    collectedMessages.push({ message: consumedMessage } as CollectedMessage);
-  }
+  collectedMessages.push({
+    header: extractMessageHeaders(message.headers),
+    message: consumedMessage,
+    key: extractMessageKey(message.key),
+    offset: message.offset,
+    timestamp: Number(message.timestamp),
+    size: message.size,
+  } as ConsumedMessage);
 
   return collectedMessages;
 }
 
+export function extractMessageKey(key: Buffer | null): string {
+  return key ? key.toString("utf8") : "";
+}
+
 export function ensureLatestMessage(
-  collectedMessages: CollectedMessage[],
-  consumedMessage: Record<string, unknown>
+  collectedMessages: ConsumedMessage[],
+  consumedMessage: ConsumedMessage
 ) {
+  const consumedMessageKey = consumedMessage.key;
+  const consumedMessageTimestamp = consumedMessage.timestamp;
+
   const index = collectedMessages.findIndex(
-    (msg) => JSON.stringify(msg.message) === JSON.stringify(consumedMessage)
+    (msg) => msg.message.key === consumedMessageKey
   );
 
   if (index !== -1) {
-    collectedMessages.splice(index, 1);
+    const existingMessageTimestamp = collectedMessages[index].message.timestamp;
+    if (consumedMessageTimestamp > Number(existingMessageTimestamp)) {
+      collectedMessages[index] = consumedMessage as ConsumedMessage;
+    }
+  } else {
+    collectedMessages.push(consumedMessage);
   }
 
   return collectedMessages;

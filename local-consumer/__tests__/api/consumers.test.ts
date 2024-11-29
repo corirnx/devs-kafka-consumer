@@ -1,5 +1,8 @@
 import { ConsumedMessage } from "@/lib/types";
-import handler, { ensureLatestMessage } from "@/pages/api/consumers";
+import handler, {
+  ensureLatestMessage,
+  extractMessageKey,
+} from "@/pages/api/consumers";
 import { Kafka } from "kafkajs";
 import { NextApiRequest, NextApiResponse } from "next";
 import { createMocks } from "node-mocks-http";
@@ -51,35 +54,99 @@ describe("Consumer Handler", () => {
   });
 });
 
-describe("Handle consumed messages", () => {
-  it("should remove the existing message if it exists", () => {
+describe("ensureLatestMessage", () => {
+  it("should update the existing message if the new message has a later timestamp", () => {
     const collectedMessages: ConsumedMessage[] = [
-      { message: { key1: "value1", key2: "value2" } },
-      { message: { key1: "value3", key2: "value4" } },
+      {
+        key: "key1",
+        timestamp: 1000,
+        message: { key: "key1", timestamp: 1000 },
+        offset: 1,
+        header: undefined,
+        size: undefined,
+      } as ConsumedMessage,
     ];
-    const consumedMessage = { key1: "value1", key2: "value2" };
+    const consumedMessage = {
+      key: "key1",
+      timestamp: 2000,
+      message: { key: "key1", timestamp: 2000 },
+      offset: 1,
+      header: undefined,
+      size: undefined,
+    } as ConsumedMessage;
 
-    ensureLatestMessage(collectedMessages, consumedMessage);
+    const result = ensureLatestMessage(collectedMessages, consumedMessage);
 
-    expect(collectedMessages).toHaveLength(1);
-    expect(collectedMessages).not.toContainEqual({ message: consumedMessage });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(consumedMessage);
   });
 
-  it("should not remove any message if it does not exist", () => {
+  it("should not update the existing message if the new message has an earlier timestamp", () => {
     const collectedMessages: ConsumedMessage[] = [
-      { message: { key1: "value1", key2: "value2" } },
-      { message: { key1: "value3", key2: "value4" } },
+      {
+        key: "key1",
+        timestamp: 2000,
+        message: { key: "key1", timestamp: 2000 },
+        offset: 2,
+        header: undefined,
+        size: undefined,
+      } as ConsumedMessage,
     ];
-    const consumedMessage = { key1: "value5", key2: "value6" };
+    const consumedMessage = {
+      key: "key1",
+      timestamp: 1000,
+      message: { key: "key1", timestamp: 1000 },
+      offset: 1,
+      header: undefined,
+      size: undefined,
+    } as ConsumedMessage;
 
-    ensureLatestMessage(collectedMessages, consumedMessage);
+    const result = ensureLatestMessage(collectedMessages, consumedMessage);
 
-    expect(collectedMessages).toHaveLength(2);
-    expect(collectedMessages).toContainEqual({
-      message: { key1: "value1", key2: "value2" },
-    });
-    expect(collectedMessages).toContainEqual({
-      message: { key1: "value3", key2: "value4" },
-    });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(collectedMessages[0]);
+  });
+
+  it("should add a new message if the message key does not exist in the collected messages", () => {
+    const collectedMessages: ConsumedMessage[] = [
+      {
+        key: "key1",
+        timestamp: 1000,
+        message: { key: "key1", timestamp: 1000 },
+        offset: 1,
+        header: undefined,
+        size: undefined,
+      } as ConsumedMessage,
+    ];
+    const consumedMessage = {
+      key: "key2",
+      timestamp: 2000,
+      message: { key: "key2", timestamp: 2000 },
+      offset: 2,
+      header: undefined,
+      size: undefined,
+    } as ConsumedMessage;
+
+    const result = ensureLatestMessage(collectedMessages, consumedMessage);
+
+    expect(result).toHaveLength(2);
+    expect(result).toContainEqual(consumedMessage);
+  });
+});
+
+describe("Handle consumed messages", () => {
+  it("should extract message key", () => {
+    const value = "21de2c33-51a6-41f7-a76c-f0f7c002533d";
+    const messageKey: Buffer = Buffer.from(value);
+
+    const extracted = extractMessageKey(messageKey);
+    expect(extracted).toBe(value);
+  });
+
+  it("should no extract non existing message key", () => {
+    const messageKey = null;
+
+    const extracted = extractMessageKey(messageKey);
+    expect(extracted).toBe("");
   });
 });
