@@ -103,7 +103,7 @@ export function handleMessage(
     header: extractMessageHeaders(message.headers),
     message: consumedMessage,
     key: extractMessageKey(message.key),
-    offset: message.offset,
+    offset: Number(message.offset),
     timestamp: Number(message.timestamp),
     size: message.size,
   } as ConsumedMessage);
