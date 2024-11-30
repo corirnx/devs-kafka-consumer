@@ -49,9 +49,7 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
     await new Promise((resolve) => setTimeout(resolve, 10000));
 
     res.status(200).json({
-      status: `${new Date().toLocaleTimeString()} | ${
-        partitionedMessages.length
-      } Messages consumed.`,
+      status: createStatusSuccessfulMessage(partitionedMessages),
       data: partitionedMessages,
       error: "",
     } as ConsumerResponse);
@@ -200,4 +198,15 @@ function addNewMessage(
 ): PartitionedMessages[] {
   partitionedMessages[partitionIndex].messages.push(consumedMessage);
   return partitionedMessages;
+}
+
+function createStatusSuccessfulMessage(
+  partitionedMessages: PartitionedMessages[]
+): string {
+  let resultMessage = `${new Date().toLocaleTimeString()}`;
+  for (const partition of partitionedMessages) {
+    resultMessage += ` | Partition ${partition.partition}: ${partition.messages.length} Messages`;    
+  }
+
+  return resultMessage;
 }
