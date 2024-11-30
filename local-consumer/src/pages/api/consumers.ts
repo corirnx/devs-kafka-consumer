@@ -100,7 +100,7 @@ export function handleMessage(
     partition,
   } as ConsumedMessage;
 
-  ensureLatestMessage(partitionedMessages, consumedMesssage);
+  handleConsumedMessage(partitionedMessages, consumedMesssage);
 
   return partitionedMessages;
 }
@@ -115,7 +115,7 @@ export function extractMessageKey(key: Buffer | null): string {
   return value;
 }
 
-export function ensureLatestMessage(
+export function handleConsumedMessage(
   partitionedMessages: PartitionedMessages[],
   consumedMessage: ConsumedMessage
 ) {
@@ -123,37 +123,81 @@ export function ensureLatestMessage(
     (prt) => prt.partition === consumedMessage.partition
   );
 
-  if (partitionIndex === -1) {
-    const ms: PartitionedMessages = {
-      partition: consumedMessage.partition,
-      data: [consumedMessage],
-    };
-    partitionedMessages.push(ms);
-  } else {
-    const collectedMessages = partitionedMessages[partitionIndex].data;
-
-    const index = collectedMessages.findLastIndex(
-      (msg) => msg.key === consumedMessage.key
-    );
-
-    if (index !== -1) {
-      // if message exists
-      const existingMessage = collectedMessages[index];
-      if ( // if consumed message is newer than the existing one
-        consumedMessage.timestamp > existingMessage.timestamp ||
-        consumedMessage.offset > existingMessage.offset
-      ) {
-        // Remove all messages with the same key
-        const newArr = collectedMessages.filter(
-          (msg) => msg.key !== consumedMessage.key
-        );
-        newArr.push(consumedMessage);
-        partitionedMessages[partitionIndex].data = newArr;
-      }
-    } else {
-      partitionedMessages[partitionIndex].data.push(consumedMessage);
-    }
+  if (isIndexExisting(partitionIndex) === false) {
+    return addMessageToNewPartition(consumedMessage, partitionedMessages);
   }
 
+  const existingMessages = partitionedMessages[partitionIndex].data;
+  const index = existingMessages.findLastIndex(
+    (msg) => msg.key === consumedMessage.key
+  );
+
+  if (isIndexExisting(index) === false) {
+    return addNewMessage(consumedMessage, partitionedMessages, partitionIndex);
+  }
+
+  const existingMessage = existingMessages[index];
+  partitionedMessages = handleExistingMessage(
+    partitionedMessages,
+    existingMessages,
+    consumedMessage,
+    existingMessage,
+    partitionIndex
+  );
+
+  return partitionedMessages;
+}
+
+function isIndexExisting(index: number): boolean {
+  return index !== -1;
+}
+
+function handleExistingMessage(
+  partitionedMessages: PartitionedMessages[],
+  collectedMessages: ConsumedMessage[],
+  consumedMessage: ConsumedMessage,
+  existingMessage: ConsumedMessage,
+  partitionIndex: number
+): PartitionedMessages[] {
+  if (isLatestMessage(consumedMessage, existingMessage) === false) {
+    return partitionedMessages;
+  }
+
+  const reducesMessages = collectedMessages.filter(
+    (msg) => msg.key !== consumedMessage.key
+  );
+  reducesMessages.push(consumedMessage);
+  partitionedMessages[partitionIndex].data = reducesMessages;
+  return partitionedMessages;
+}
+
+function isLatestMessage(
+  consumedMessage: ConsumedMessage,
+  existingMessage: ConsumedMessage
+): boolean {
+  return (
+    consumedMessage.timestamp > existingMessage.timestamp ||
+    consumedMessage.offset > existingMessage.offset
+  );
+}
+
+function addMessageToNewPartition(
+  consumedMessage: ConsumedMessage,
+  partitionedMessages: PartitionedMessages[]
+): PartitionedMessages[] {
+  const partitionMessages: PartitionedMessages = {
+    partition: consumedMessage.partition,
+    data: [consumedMessage],
+  };
+  partitionedMessages.push(partitionMessages);
+  return partitionedMessages;
+}
+
+function addNewMessage(
+  consumedMessage: ConsumedMessage,
+  partitionedMessages: PartitionedMessages[],
+  partitionIndex: number
+): PartitionedMessages[] {
+  partitionedMessages[partitionIndex].data.push(consumedMessage);
   return partitionedMessages;
 }

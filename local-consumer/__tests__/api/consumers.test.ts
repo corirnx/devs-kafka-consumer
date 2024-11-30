@@ -1,6 +1,6 @@
-import { ConsumedMessage } from "@/lib/types";
+import { ConsumedMessage, PartitionedMessages } from "@/lib/types";
 import handler, {
-  ensureLatestMessage,
+  handleConsumedMessage,
   extractMessageKey,
 } from "@/pages/api/consumers";
 import { Kafka } from "kafkajs";
@@ -55,43 +55,8 @@ describe("Consumer Handler", () => {
 });
 
 describe("ensureLatestMessage", () => {
-  it("should update the existing message if the new message has a later timestamp", () => {
-    const collectedMessages: ConsumedMessage[] = [
-      {
-        key: "key1",
-        timestamp: 1000,
-        message: { key: "key1", timestamp: 1000 },
-        offset: 1,
-        header: undefined,
-        size: undefined,
-      } as ConsumedMessage,
-    ];
-    const consumedMessage = {
-      key: "key1",
-      timestamp: 2000,
-      message: { key: "key1", timestamp: 2000 },
-      offset: 1,
-      header: undefined,
-      size: undefined,
-    } as ConsumedMessage;
-
-    const result = ensureLatestMessage(collectedMessages, consumedMessage);
-
-    expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(consumedMessage);
-  });
-
-  it("should not update the existing message if the new message has an earlier timestamp", () => {
-    const collectedMessages: ConsumedMessage[] = [
-      {
-        key: "key1",
-        timestamp: 2000,
-        message: { key: "key1", timestamp: 2000 },
-        offset: 2,
-        header: undefined,
-        size: undefined,
-      } as ConsumedMessage,
-    ];
+  it("should add a new partition if the partition does not exist", () => {
+    const partitionedMessages: PartitionedMessages[] = [];
     const consumedMessage = {
       key: "key1",
       timestamp: 1000,
@@ -99,24 +64,32 @@ describe("ensureLatestMessage", () => {
       offset: 1,
       header: undefined,
       size: undefined,
+      partition: 0,
     } as ConsumedMessage;
 
-    const result = ensureLatestMessage(collectedMessages, consumedMessage);
+    const result = handleConsumedMessage(partitionedMessages, consumedMessage);
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual(collectedMessages[0]);
+    expect(result[0].partition).toBe(0);
+    expect(result[0].data).toContainEqual(consumedMessage);
   });
 
-  it("should add a new message if the message key does not exist in the collected messages", () => {
-    const collectedMessages: ConsumedMessage[] = [
+  it("should add a new message if the message key does not exist in the partition", () => {
+    const partitionedMessages: PartitionedMessages[] = [
       {
-        key: "key1",
-        timestamp: 1000,
-        message: { key: "key1", timestamp: 1000 },
-        offset: 1,
-        header: undefined,
-        size: undefined,
-      } as ConsumedMessage,
+        partition: 0,
+        data: [
+          {
+            key: "key1",
+            timestamp: 1000,
+            message: { key: "key1", timestamp: 1000 },
+            offset: 1,
+            header: undefined,
+            size: undefined,
+            partition: 0,
+          } as ConsumedMessage,
+        ],
+      },
     ];
     const consumedMessage = {
       key: "key2",
@@ -125,12 +98,79 @@ describe("ensureLatestMessage", () => {
       offset: 2,
       header: undefined,
       size: undefined,
+      partition: 0,
     } as ConsumedMessage;
 
-    const result = ensureLatestMessage(collectedMessages, consumedMessage);
+    const result = handleConsumedMessage(partitionedMessages, consumedMessage);
 
-    expect(result).toHaveLength(2);
-    expect(result).toContainEqual(consumedMessage);
+    expect(result[0].data).toHaveLength(2);
+    expect(result[0].data).toContainEqual(consumedMessage);
+  });
+
+  it("should update the existing message if the new message has a later timestamp", () => {
+    const partitionedMessages: PartitionedMessages[] = [
+      {
+        partition: 0,
+        data: [
+          {
+            key: "key1",
+            timestamp: 1000,
+            message: { key: "key1", timestamp: 1000 },
+            offset: 1,
+            header: undefined,
+            size: undefined,
+            partition: 0,
+          } as ConsumedMessage,
+        ],
+      },
+    ];
+    const consumedMessage = {
+      key: "key1",
+      timestamp: 2000,
+      message: { key: "key1", timestamp: 2000 },
+      offset: 2,
+      header: undefined,
+      size: undefined,
+      partition: 0,
+    } as ConsumedMessage;
+
+    const result = handleConsumedMessage(partitionedMessages, consumedMessage);
+
+    expect(result[0].data).toHaveLength(1);
+    expect(result[0].data[0]).toEqual(consumedMessage);
+  });
+
+  it("should not update the existing message if the new message has an earlier timestamp", () => {
+    const partitionedMessages: PartitionedMessages[] = [
+      {
+        partition: 0,
+        data: [
+          {
+            key: "key1",
+            timestamp: 2000,
+            message: { key: "key1", timestamp: 2000 },
+            offset: 2,
+            header: undefined,
+            size: undefined,
+            partition: 0,
+          } as ConsumedMessage,
+        ],
+      },
+    ];
+    const consumedMessage = {
+      key: "key1",
+      timestamp: 1000,
+      message: { key: "key1", timestamp: 1000 },
+      offset: 1,
+      header: undefined,
+      size: undefined,
+      partition: 0,
+    } as ConsumedMessage;
+
+    const result = handleConsumedMessage(partitionedMessages, consumedMessage);
+
+    expect(result[0].data).toHaveLength(1);
+    expect(result[0].data[0]).toEqual(partitionedMessages[0].data[0]);
   });
 });
 
