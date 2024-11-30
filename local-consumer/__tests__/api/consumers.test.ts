@@ -7,7 +7,6 @@ process.env.KAFKA_USERNAME = "test-username";
 process.env.KAFKA_PASSWORD = "test-password";
 process.env.KAFKA_CLIENT_ID = "test-client-id";
 
-// Mock the Kafka library
 jest.mock("kafkajs", () => {
   const mKafka = {
     consumer: jest.fn().mockReturnValue({
@@ -19,7 +18,6 @@ jest.mock("kafkajs", () => {
   };
   return { Kafka: jest.fn(() => mKafka), logLevel: { INFO: 1 } };
 });
-
 
 describe("Consumer Handler", () => {
   it("should handle errors and return 500", async () => {

@@ -1,5 +1,5 @@
 import ConsumerViewer from "@/app/dashboard/consumer/page";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
 describe("ConsumerViewer", () => {
@@ -19,5 +19,19 @@ describe("ConsumerViewer", () => {
         const inputFields = screen.getAllByRole("textbox");
 
         expect(inputFields).toHaveLength(3);
+    });
+
+    it("should handle invalid input", async () => {
+        render(<ConsumerViewer />);
+
+        const consumeButton = screen.getByRole("consume-button");
+
+        fireEvent.click(consumeButton);
+
+        await waitFor(() => {
+            expect(screen.getByText((content, element) => {
+                return element?.tagName.toLowerCase() === 'pre' && content.includes("required fields are missing");
+            })).toBeInTheDocument();
+        });
     });
 });

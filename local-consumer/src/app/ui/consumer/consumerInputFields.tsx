@@ -16,7 +16,7 @@ interface ConsumerInputFieldsProps {
         <InputField placeholder="topic name" name="inputTopic" ref={refTopic} />
         <InputField placeholder="consumer group id" name="inputConsumerGroupId" ref={refConsumerId} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <Link href='' onClick={handleConsumeClick}
+          <Link href='' onClick={handleConsumeClick} role="consume-button"
             className="flex h-[48px] w-auto w-max:15 grow gap-2 rounded-full 
             md:flex-none md:justify-start md:p-2 md:px-3 p-3 
             bg-green-500 hover:bg-green-400">
