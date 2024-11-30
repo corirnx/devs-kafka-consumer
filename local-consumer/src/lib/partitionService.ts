@@ -21,10 +21,7 @@ class PartitionService {
     );
 
     if (this.isIndexExisting(partitionIndex) === false) {
-      return this.addMessageToNewPartition(
-        consumedMesssage,
-        this.partitionedMessages
-      );
+      return this.addMessageToNewPartition(consumedMesssage);
     }
 
     const existingMessages = this.partitionedMessages[partitionIndex].messages;
@@ -33,63 +30,37 @@ class PartitionService {
     );
 
     if (this.isIndexExisting(index) === false) {
-      return this.addNewMessage(
-        consumedMesssage,
-        this.partitionedMessages,
-        partitionIndex
-      );
+      return this.addNewMessage(consumedMesssage, partitionIndex);
     }
 
     const existingMessage = existingMessages[index];
-    this.partitionedMessages = this.handleExistingMessage(
-      this.partitionedMessages,
+    this.handleExistingMessage(
       existingMessages,
       consumedMesssage,
       existingMessage,
       partitionIndex
     );
   }
+
   private isIndexExisting(index: number): boolean {
     return index !== -1;
   }
-  private addMessageToNewPartition(
-    consumedMessage: ConsumedMessage,
-    partitionedMessages: PartitionedMessages[]
-  ): PartitionedMessages[] {
-    const partitionMessages: PartitionedMessages = {
-      partition: consumedMessage.partition,
-      messages: [consumedMessage],
-    };
-    partitionedMessages.push(partitionMessages);
-    return partitionedMessages;
-  }
-
-  private addNewMessage(
-    consumedMessage: ConsumedMessage,
-    partitionedMessages: PartitionedMessages[],
-    partitionIndex: number
-  ): PartitionedMessages[] {
-    partitionedMessages[partitionIndex].messages.push(consumedMessage);
-    return partitionedMessages;
-  }
 
   private handleExistingMessage(
-    partitionedMessages: PartitionedMessages[],
     collectedMessages: ConsumedMessage[],
     consumedMessage: ConsumedMessage,
     existingMessage: ConsumedMessage,
     partitionIndex: number
-  ): PartitionedMessages[] {
+  ) {
     if (this.isLatestMessage(consumedMessage, existingMessage) === false) {
-      return partitionedMessages;
+      return;
     }
 
     const reducesMessages = collectedMessages.filter(
       (msg) => msg.key !== consumedMessage.key
     );
     reducesMessages.push(consumedMessage);
-    partitionedMessages[partitionIndex].messages = reducesMessages;
-    return partitionedMessages;
+    this.partitionedMessages[partitionIndex].messages = reducesMessages;
   }
 
   private isLatestMessage(
@@ -100,6 +71,20 @@ class PartitionService {
       consumedMessage.timestamp > existingMessage.timestamp ||
       consumedMessage.offset > existingMessage.offset
     );
+  }
+
+  private addMessageToNewPartition(consumedMessage: ConsumedMessage) {
+    this.partitionedMessages.push({
+      partition: consumedMessage.partition,
+      messages: [consumedMessage],
+    });
+  }
+
+  private addNewMessage(
+    consumedMessage: ConsumedMessage,
+    partitionIndex: number
+  ) {
+    this.partitionedMessages[partitionIndex].messages.push(consumedMessage);
   }
 }
 

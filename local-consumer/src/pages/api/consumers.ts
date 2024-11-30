@@ -9,6 +9,8 @@ import {
 import { EachMessagePayload } from "kafkajs";
 import { NextApiRequest, NextApiResponse } from "next";
 
+const CONSUMER_DELAY_MS = 10000;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -40,19 +42,20 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
         partition,
         message,
       }: EachMessagePayload) => {
-        //console.log(topic, partition, message.timestamp);
+        console.log(
+          `Consuming message from topic ${topic}, partition ${partition}, offset ${message.offset}`
+        );
         partitionService.processMessage(message, partition);
       },
     });
 
     // Simulate a delay to allow the consumer to process the message
-    await new Promise((resolve) => setTimeout(resolve, 10000));
+    await new Promise((resolve) => setTimeout(resolve, CONSUMER_DELAY_MS));
 
+    const partitionedMessages = partitionService.getPartitionedMessages();
     res.status(200).json({
-      status: createStatusSuccessfulMessage(
-        partitionService.getPartitionedMessages()
-      ),
-      data: orderMessagesDesc(partitionService.getPartitionedMessages()),
+      status: createStatusSuccessfulMessage(partitionedMessages),
+      data: orderMessagesDesc(partitionedMessages),
       error: "",
     } as ConsumerResponse);
   } catch (e: any) {
@@ -68,6 +71,7 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
       }
     } catch (disconnectError) {
       console.error("Error disconnecting consumer:", disconnectError);
+      consumer?.disconnect();
     }
   }
 }

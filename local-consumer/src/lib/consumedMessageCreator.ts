@@ -1,11 +1,17 @@
 import { ConsumedMessage } from "./types";
 import { IHeaders, KafkaMessage } from "kafkajs";
 
+/**
+ * Creates a consumed message from a Kafka message.
+ * @param message - The Kafka message.
+ * @param partition - The partition number.
+ * @returns A consumed message.
+ */
 export function createConsumedMessage(
   message: KafkaMessage,
   partition: number
 ): ConsumedMessage {
-  const consumedValue = JSON.parse(message.value!.toString());
+  const consumedValue = message.value ? JSON.parse(message.value.toString()) : {};
   const consumedMesssage = {
     header: extractMessageHeaders(message.headers),
     message: consumedValue,

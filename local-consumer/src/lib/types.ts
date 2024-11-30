@@ -10,14 +10,17 @@ export interface ConsumerPayload {
   consumerGroupId: string;
 }
 
+type Headers = Record<string, string>;
+type MessageContent = Record<string, unknown>;
+
 export interface ConsumedMessage {
-  header?: Record<string, string>;
+  header?: Headers;
   key: string;
   offset: number;
   size?: string;
   timestamp: number;
   partition: number;
-  message: Record<string, unknown>;
+  message: MessageContent;
 }
 
 export interface PartitionedMessages {
