@@ -1,12 +1,12 @@
 import { createKafka } from "@/lib/kafkaProvider";
+import PartitionService from "@/lib/partitionService";
 import { validateRequest } from "@/lib/requestValidator";
 import {
-  ConsumedMessage,
   ConsumerPayload,
   ConsumerResponse,
   PartitionedMessages,
 } from "@/lib/types";
-import { EachMessagePayload, IHeaders, KafkaMessage } from "kafkajs";
+import { EachMessagePayload } from "kafkajs";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
@@ -21,7 +21,7 @@ export default async function handler(
 }
 
 async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
-  const partitionedMessages: PartitionedMessages[] = [];
+  const partitionService = new PartitionService([]);
   let consumer;
 
   try {
@@ -41,7 +41,7 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
         message,
       }: EachMessagePayload) => {
         //console.log(topic, partition, message.timestamp);
-        handleMessage(partitionedMessages, message, partition);
+        partitionService.processMessage(message, partition);
       },
     });
 
@@ -49,8 +49,10 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
     await new Promise((resolve) => setTimeout(resolve, 10000));
 
     res.status(200).json({
-      status: createStatusSuccessfulMessage(partitionedMessages),
-      data: orderMessagesDesc(partitionedMessages),
+      status: createStatusSuccessfulMessage(
+        partitionService.getPartitionedMessages()
+      ),
+      data: orderMessagesDesc(partitionService.getPartitionedMessages()),
       error: "",
     } as ConsumerResponse);
   } catch (e: any) {
@@ -70,142 +72,12 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
   }
 }
 
-function extractMessageHeaders(
-  headers: IHeaders | undefined
-): Record<string, string> {
-  const humanReadableHeaders: Record<string, string> = {};
-  if (headers) {
-    for (const [key, value] of Object.entries(headers)) {
-      humanReadableHeaders[key] = value!.toString();
-    }
-  }
-  return humanReadableHeaders;
-}
-
-export function handleMessage(
-  partitionedMessages: PartitionedMessages[],
-  message: KafkaMessage,
-  partition: number
-): PartitionedMessages[] {
-  const consumedValue = JSON.parse(message.value!.toString());
-  const consumedMesssage = {
-    header: extractMessageHeaders(message.headers),
-    message: consumedValue,
-    key: extractMessageKey(message.key),
-    offset: Number(message.offset),
-    timestamp: Number(message.timestamp),
-    size: message.size,
-    partition,
-  } as ConsumedMessage;
-
-  handleConsumedMessage(partitionedMessages, consumedMesssage);
-
-  return partitionedMessages;
-}
-
-export function extractMessageKey(key: Buffer | null): string {
-  let value = "";
-  try {
-    value = key!.toString("utf8");
-  } catch (e) {
-    console.log(e);
-  }
-  return value;
-}
-
-export function handleConsumedMessage(
-  partitionedMessages: PartitionedMessages[],
-  consumedMessage: ConsumedMessage
-) {
-  const partitionIndex = partitionedMessages.findIndex(
-    (prt) => prt.partition === consumedMessage.partition
-  );
-
-  if (isIndexExisting(partitionIndex) === false) {
-    return addMessageToNewPartition(consumedMessage, partitionedMessages);
-  }
-
-  const existingMessages = partitionedMessages[partitionIndex].messages;
-  const index = existingMessages.findLastIndex(
-    (msg) => msg.key === consumedMessage.key
-  );
-
-  if (isIndexExisting(index) === false) {
-    return addNewMessage(consumedMessage, partitionedMessages, partitionIndex);
-  }
-
-  const existingMessage = existingMessages[index];
-  partitionedMessages = handleExistingMessage(
-    partitionedMessages,
-    existingMessages,
-    consumedMessage,
-    existingMessage,
-    partitionIndex
-  );
-
-  return partitionedMessages;
-}
-
-function isIndexExisting(index: number): boolean {
-  return index !== -1;
-}
-
-function handleExistingMessage(
-  partitionedMessages: PartitionedMessages[],
-  collectedMessages: ConsumedMessage[],
-  consumedMessage: ConsumedMessage,
-  existingMessage: ConsumedMessage,
-  partitionIndex: number
-): PartitionedMessages[] {
-  if (isLatestMessage(consumedMessage, existingMessage) === false) {
-    return partitionedMessages;
-  }
-
-  const reducesMessages = collectedMessages.filter(
-    (msg) => msg.key !== consumedMessage.key
-  );
-  reducesMessages.push(consumedMessage);
-  partitionedMessages[partitionIndex].messages = reducesMessages;
-  return partitionedMessages;
-}
-
-function isLatestMessage(
-  consumedMessage: ConsumedMessage,
-  existingMessage: ConsumedMessage
-): boolean {
-  return (
-    consumedMessage.timestamp > existingMessage.timestamp ||
-    consumedMessage.offset > existingMessage.offset
-  );
-}
-
-function addMessageToNewPartition(
-  consumedMessage: ConsumedMessage,
-  partitionedMessages: PartitionedMessages[]
-): PartitionedMessages[] {
-  const partitionMessages: PartitionedMessages = {
-    partition: consumedMessage.partition,
-    messages: [consumedMessage],
-  };
-  partitionedMessages.push(partitionMessages);
-  return partitionedMessages;
-}
-
-function addNewMessage(
-  consumedMessage: ConsumedMessage,
-  partitionedMessages: PartitionedMessages[],
-  partitionIndex: number
-): PartitionedMessages[] {
-  partitionedMessages[partitionIndex].messages.push(consumedMessage);
-  return partitionedMessages;
-}
-
 function createStatusSuccessfulMessage(
   partitionedMessages: PartitionedMessages[]
 ): string {
   let resultMessage = `${new Date().toLocaleTimeString()}`;
   for (const partition of partitionedMessages) {
-    resultMessage += ` | Partition ${partition.partition}: ${partition.messages.length} Messages`;    
+    resultMessage += ` | Partition ${partition.partition}: ${partition.messages.length} Messages`;
   }
 
   return resultMessage;
