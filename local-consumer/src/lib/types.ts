@@ -1,13 +1,13 @@
 export interface ConsumerResponse {
-    status: string;
-    data?: any[];
-    error: string;
-  }
+  status: string;
+  data?: PartitionedMessages[];
+  error: string;
+}
 
 export interface ConsumerPayload {
-    host: string;
-    topic: string;
-    consumerGroupId: string;
+  host: string;
+  topic: string;
+  consumerGroupId: string;
 }
 
 export interface ConsumedMessage {
@@ -15,6 +15,17 @@ export interface ConsumedMessage {
   key: string;
   offset: number;
   size?: string;
-  timestamp: number;    
+  timestamp: number;
+  partition: number;
   message: Record<string, unknown>;
+}
+
+// export interface ConsumerResponse {
+//   status: string;
+//   data?: ConsumedMessage[];
+//   error: string;
+// }
+export interface PartitionedMessages {
+  partition: number;
+  data: ConsumedMessage[];
 }

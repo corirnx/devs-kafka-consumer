@@ -4,6 +4,7 @@ import {
   ConsumedMessage,
   ConsumerPayload,
   ConsumerResponse,
+  PartitionedMessages,
 } from "@/lib/types";
 import { EachMessagePayload, IHeaders, KafkaMessage } from "kafkajs";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -20,7 +21,7 @@ export default async function handler(
 }
 
 async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
-  const collectedMessages: ConsumedMessage[] = [];
+  const partitionedMessages: PartitionedMessages[] = [];
   let consumer;
 
   try {
@@ -40,7 +41,7 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
         message,
       }: EachMessagePayload) => {
         //console.log(topic, partition, message.timestamp);
-        handleMessage(collectedMessages, message);
+        handleMessage(partitionedMessages, message, partition);
       },
     });
 
@@ -49,9 +50,9 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
 
     res.status(200).json({
       status: `${new Date().toLocaleTimeString()} | ${
-        collectedMessages.length
+        partitionedMessages.length
       } Messages consumed.`,
-      data: collectedMessages,
+      data: partitionedMessages,
       error: "",
     } as ConsumerResponse);
   } catch (e: any) {
@@ -84,56 +85,75 @@ function extractMessageHeaders(
 }
 
 export function handleMessage(
-  collectedMessages: ConsumedMessage[],
-  message: KafkaMessage
-): ConsumedMessage[] {
-  const consumedMessage = JSON.parse(message.value!.toString());
-  try {
-    console.log(message.key);
-    const keyString = message.key!.toString("utf8");
-    console.log(keyString);
-  } catch (e) {
-    console.log(message.key);
-    console.log(e);
-  }
-
-  ensureLatestMessage(collectedMessages, consumedMessage);
-
-  collectedMessages.push({
+  partitionedMessages: PartitionedMessages[],
+  message: KafkaMessage,
+  partition: number
+): PartitionedMessages[] {
+  const consumedValue = JSON.parse(message.value!.toString());
+  const consumedMesssage = {
     header: extractMessageHeaders(message.headers),
-    message: consumedMessage,
+    message: consumedValue,
     key: extractMessageKey(message.key),
     offset: Number(message.offset),
     timestamp: Number(message.timestamp),
     size: message.size,
-  } as ConsumedMessage);
+    partition,
+  } as ConsumedMessage;
 
-  return collectedMessages;
+  ensureLatestMessage(partitionedMessages, consumedMesssage);
+
+  return partitionedMessages;
 }
 
 export function extractMessageKey(key: Buffer | null): string {
-  return key ? key.toString("utf8") : "";
+  let value = "";
+  try {
+    value = key!.toString("utf8");
+  } catch (e) {
+    console.log(e);
+  }
+  return value;
 }
 
 export function ensureLatestMessage(
-  collectedMessages: ConsumedMessage[],
+  partitionedMessages: PartitionedMessages[],
   consumedMessage: ConsumedMessage
 ) {
-  const consumedMessageKey = consumedMessage.key;
-  const consumedMessageTimestamp = consumedMessage.timestamp;
-
-  const index = collectedMessages.findIndex(
-    (msg) => msg.message.key === consumedMessageKey
+  const partitionIndex = partitionedMessages.findIndex(
+    (prt) => prt.partition === consumedMessage.partition
   );
 
-  if (index !== -1) {
-    const existingMessageTimestamp = collectedMessages[index].message.timestamp;
-    if (consumedMessageTimestamp > Number(existingMessageTimestamp)) {
-      collectedMessages[index] = consumedMessage as ConsumedMessage;
-    }
+  if (partitionIndex === -1) {
+    const ms: PartitionedMessages = {
+      partition: consumedMessage.partition,
+      data: [consumedMessage],
+    };
+    partitionedMessages.push(ms);
   } else {
-    collectedMessages.push(consumedMessage);
+    const collectedMessages = partitionedMessages[partitionIndex].data;
+
+    const index = collectedMessages.findLastIndex(
+      (msg) => msg.key === consumedMessage.key
+    );
+
+    if (index !== -1) {
+      // if message exists
+      const existingMessage = collectedMessages[index];
+      if ( // if consumed message is newer than the existing one
+        consumedMessage.timestamp > existingMessage.timestamp ||
+        consumedMessage.offset > existingMessage.offset
+      ) {
+        // Remove all messages with the same key
+        const newArr = collectedMessages.filter(
+          (msg) => msg.key !== consumedMessage.key
+        );
+        newArr.push(consumedMessage);
+        partitionedMessages[partitionIndex].data = newArr;
+      }
+    } else {
+      partitionedMessages[partitionIndex].data.push(consumedMessage);
+    }
   }
 
-  return collectedMessages;
+  return partitionedMessages;
 }
