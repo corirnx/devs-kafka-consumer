@@ -216,7 +216,7 @@ function orderMessagesDesc(
 ): PartitionedMessages[] {
   return partitionedMessages.map((partition) => {
     partition.messages = partition.messages.sort((a, b) => {
-      return b.timestamp - a.timestamp;
+      return b.offset - a.offset;
     });
     return partition;
   });
