@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/20/solid";
 
 interface PagingNavigationProps {
     pagingTitle: string;
@@ -32,9 +33,9 @@ const PagingNavigation: React.FC<PagingNavigationProps> = ({ pagingTitle, totalI
             <button
                 onClick={handlePreviousPage}
                 disabled={currentPage === 1}
-                className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-black rounded disabled:opacity-50"
+                className="px-4 py-2 bg-green-300 hover:bg-green-200 text-black rounded disabled:opacity-50"
             >
-                Previous
+                <ArrowLeftIcon className="h-5 w-5" />
             </button>
             <span className="text-white">
                 {pagingTitle} {currentPage} of {totalPages}
@@ -42,9 +43,9 @@ const PagingNavigation: React.FC<PagingNavigationProps> = ({ pagingTitle, totalI
             <button
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-black rounded disabled:opacity-50"
+                className="px-4 py-2 bg-green-300 hover:bg-green-200 text-black rounded disabled:opacity-50"
             >
-                Next
+                <ArrowRightIcon className="h-5 w-5" />
             </button>
         </div>
     );
