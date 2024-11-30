@@ -11,7 +11,6 @@ interface PagingNavigationProps {
 const PagingNavigation: React.FC<PagingNavigationProps> = ({ pagingTitle, totalItems, itemsPerPage, onPageChange }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.ceil(totalItems / itemsPerPage);
-
     const handleNextPage = () => {
         if (currentPage < totalPages) {
             const nextPage = currentPage + 1;
@@ -31,6 +30,7 @@ const PagingNavigation: React.FC<PagingNavigationProps> = ({ pagingTitle, totalI
     return (
         <div className="flex justify-between mt-4 mb-4">
             <button
+                role='paging-left'
                 onClick={handlePreviousPage}
                 disabled={currentPage === 1}
                 className="px-4 py-2 bg-green-300 hover:bg-green-200 text-black rounded disabled:opacity-50"
@@ -41,6 +41,7 @@ const PagingNavigation: React.FC<PagingNavigationProps> = ({ pagingTitle, totalI
                 {pagingTitle} {currentPage} of {totalPages}
             </span>
             <button
+                role='paging-right'
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
                 className="px-4 py-2 bg-green-300 hover:bg-green-200 text-black rounded disabled:opacity-50"
