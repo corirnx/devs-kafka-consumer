@@ -3,6 +3,7 @@ import CollapsibleJsonItem from '../collapsibleJsonItem';
 import { PartitionedMessages } from '@/lib/types';
 import TableHeaderCell from './tableHeaderCell';
 import TableColumnCell from './tableColumnCell';
+import PagingNavigation from './pagingNavigation';
 
 interface MessagesTableProps {
     partition: PartitionedMessages;
@@ -12,18 +13,8 @@ const MessagesTable: React.FC<MessagesTableProps> = ({ partition: data }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    const totalPages = Math.ceil(data.messages.length / itemsPerPage);
-
-    const handleNextPage = () => {
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
-        }
-    };
-
-    const handlePreviousPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
     };
 
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -63,25 +54,11 @@ const MessagesTable: React.FC<MessagesTableProps> = ({ partition: data }) => {
                     ))}
                 </tbody>
             </table>
-            <div className="flex justify-between mt-4">
-                <button
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-black rounded disabled:opacity-50"
-                >
-                    Previous
-                </button>
-                <span className="text-white">
-                    Messages Page {currentPage} of {totalPages}
-                </span>
-                <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-black rounded disabled:opacity-50"
-                >
-                    Next
-                </button>
-            </div>
+            <PagingNavigation
+                pagingTitle={"Messages Page"}
+                totalItems={data.messages.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange} />
         </div>
     );
 };
