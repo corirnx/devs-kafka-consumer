@@ -87,7 +87,7 @@ export default function ConsumerViewer() {
                                 {loading ? (
                                     <LoadingCircle />
                                 ) : (
-                                    <div>
+                                    <div className="w-full">
                                         <h4 className="font-semibold">Response</h4>
                                         {consumerResponse.error ? (
                                             <pre>{consumerResponse.error}</pre>
@@ -95,9 +95,6 @@ export default function ConsumerViewer() {
                                             <div>
                                                 <h6>{consumerResponse.status}</h6>
                                                 <div className="overflow-auto w-auto">
-                                                    {/* {consumerResponse.data?.map((partition, index) => (
-                                                        <MessagesTable key={index} partition={partition} />
-                                                    ))} */}
                                                     <PagedTable partitionedMessages={consumerResponse.data!} />
                                                 </div>
                                             </div>
