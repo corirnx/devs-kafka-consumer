@@ -6,7 +6,7 @@ import { Suspense, useRef, useState } from "react";
 import { ConsumerResponse, ConsumerPayload } from "@/lib/types";
 import InputField from "@/app/ui/text-input";
 import LoadingCircle from "@/app/ui/loading";
-import CollapsibleJsonItem from "@/app/ui/collapsibleJsonItem";
+import MessagesTable from "@/app/ui/messagesResultTable/messagesResultTable";
 
 
 export default function ConsumerViewer() {
@@ -87,66 +87,18 @@ export default function ConsumerViewer() {
                                 {loading ? (
                                     <LoadingCircle />
                                 ) : (
-
-                                    //// draw per Partition
-                                    //// order by partion id
-
                                     <div>
                                         <h4 className="font-semibold">Response</h4>
-
-
                                         {consumerResponse.error ? (
                                             <pre>{consumerResponse.error}</pre>
                                         ) : (
                                             <div>
-
                                                 <h6>status: {consumerResponse.status}</h6>
-
                                                 <div className="overflow-auto w-auto">
-                                                    <table className="min-w-full divide-y divide-gray-200">
-                                                        <thead>
-                                                            <tr>
-                                                                <th className="px-6 py-3 bg-gray-200 text-left text-xs text-gray-500 uppercase tracking-wider">id</th>
-                                                                <th className="px-6 py-3 bg-gray-200 text-left text-xs text-black uppercase tracking-wider">partition</th>
-                                                                <th className="px-6 py-3 bg-gray-200 text-left text-xs text-gray-500 uppercase tracking-wider">key</th>
-                                                                <th className="px-6 py-3 bg-gray-200 text-left text-xs text-gray-500 uppercase tracking-wider">timestamp</th>
-                                                                <th className="px-6 py-3 bg-gray-200 text-left text-xs text-black uppercase tracking-wider">size</th>
-                                                                <th className="px-6 py-3 bg-gray-200 text-left text-xs text-black uppercase tracking-wider">offset</th>
-                                                                <th className="px-6 py-3 bg-gray-200 text-left text-xs text-black uppercase tracking-wider">header</th>
-                                                                <th className="px-6 py-3 bg-gray-200 text-left text-xs text-black uppercase tracking-wider">value</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody className="bg-white divide-y text-black">
-
-                                                            {consumerResponse.data?.map((partition, index) => (
-                                                                partition.data.map((item, index) => (
-                                                                    <tr key={index}>
-                                                                        <td className="px-6 py-4 whitespace-nowrap">{index}</td>
-                                                                        <td className="px-6 py-4 whitespace-nowrap">{item.partition}</td>
-                                                                        <td className="px-6 py-4 whitespace-nowrap">{item.key}</td>
-                                                                        <td className="px-6 py-4 whitespace-nowrap">{new Date(item.timestamp).toLocaleString()}</td>
-                                                                        <td className="px-6 py-4 whitespace-nowrap">{item.size}</td>
-                                                                        <td className="px-6 py-4 whitespace-nowrap">{item.offset}</td>
-                                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                                            {/* <pre>
-                                                                            {JSON.stringify(item.header, null, 2)}
-                                                                        </pre> */}
-                                                                            <CollapsibleJsonItem data={item.header} />
-
-                                                                        </td>
-                                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                                            {/* <pre>
-                                                                            {JSON.stringify(item.message, null, 2)}
-                                                                        </pre> */}
-
-                                                                            <CollapsibleJsonItem data={item.message} />
-                                                                        </td>
-                                                                    </tr>
-                                                                ))
-                                                            ))}
-
-                                                        </tbody>
-                                                    </table>
+                                                    {consumerResponse.data?.map((partition, index) => (
+                                                        <MessagesTable partition={partition} />
+                                                    ))
+                                                    }
                                                 </div>
                                             </div>
                                         )}
