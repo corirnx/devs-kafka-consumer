@@ -93,12 +93,11 @@ export default function ConsumerViewer() {
                                             <pre>{consumerResponse.error}</pre>
                                         ) : (
                                             <div>
-                                                <h6>status: {consumerResponse.status}</h6>
+                                                <h6>{consumerResponse.status}</h6>
                                                 <div className="overflow-auto w-auto">
                                                     {consumerResponse.data?.map((partition, index) => (
-                                                        <MessagesTable partition={partition} />
-                                                    ))
-                                                    }
+                                                        <MessagesTable key={index} partition={partition} />
+                                                    ))}
                                                 </div>
                                             </div>
                                         )}
