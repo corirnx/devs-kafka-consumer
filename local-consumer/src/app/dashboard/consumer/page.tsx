@@ -6,7 +6,7 @@ import { Suspense, useRef, useState } from "react";
 import { ConsumerResponse, ConsumerPayload } from "@/lib/types";
 import InputField from "@/app/ui/text-input";
 import LoadingCircle from "@/app/ui/loading";
-import MessagesTable from "@/app/ui/messagesResultTable/messagesResultTable";
+import PagedTable from "@/app/ui/messagesResultTable/pagedTable";
 
 
 export default function ConsumerViewer() {
@@ -95,9 +95,10 @@ export default function ConsumerViewer() {
                                             <div>
                                                 <h6>{consumerResponse.status}</h6>
                                                 <div className="overflow-auto w-auto">
-                                                    {consumerResponse.data?.map((partition, index) => (
+                                                    {/* {consumerResponse.data?.map((partition, index) => (
                                                         <MessagesTable key={index} partition={partition} />
-                                                    ))}
+                                                    ))} */}
+                                                    <PagedTable partitionedMessages={consumerResponse.data!} />
                                                 </div>
                                             </div>
                                         )}
