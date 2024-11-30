@@ -29,10 +29,10 @@ const MessagesTable: React.FC<MessagesTableProps> = ({ partition: data }) => {
                         <TableHeaderCell headerTitle={"partition"} />
                         <TableHeaderCell headerTitle={"key"} />
                         <TableHeaderCell headerTitle={"timestamp"} />
-                        <TableHeaderCell headerTitle={"size"} />
-                        <TableHeaderCell headerTitle={"offset"} />
-                        <TableHeaderCell headerTitle={"header"} />
                         <TableHeaderCell headerTitle={"value"} />
+                        <TableHeaderCell headerTitle={"header"} />
+                        <TableHeaderCell headerTitle={"offset"} />
+                        <TableHeaderCell headerTitle={"size"} />
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y text-black">
@@ -42,14 +42,14 @@ const MessagesTable: React.FC<MessagesTableProps> = ({ partition: data }) => {
                             <TableColumnCell columnValue={item.partition} />
                             <TableColumnCell columnValue={item.key} />
                             <TableColumnCell columnValue={new Date(item.timestamp).toLocaleString()} />
-                            <TableColumnCell columnValue={item.size} />
-                            <TableColumnCell columnValue={item.offset} />
-                            <TableColumnCell columnValue={
-                                <CollapsibleJsonItem data={item.header} />
-                            } />
                             <TableColumnCell columnValue={
                                 <CollapsibleJsonItem data={item.message} />
                             } />
+                            <TableColumnCell columnValue={
+                                <CollapsibleJsonItem data={item.header} />
+                            } />                            
+                            <TableColumnCell columnValue={item.offset} />
+                            <TableColumnCell columnValue={item.size} />
                         </tr>
                     ))}
                 </tbody>
