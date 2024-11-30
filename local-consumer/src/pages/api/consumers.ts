@@ -50,7 +50,7 @@ async function consumeMessages(payload: ConsumerPayload, res: NextApiResponse) {
 
     res.status(200).json({
       status: createStatusSuccessfulMessage(partitionedMessages),
-      data: partitionedMessages,
+      data: orderMessagesDesc(partitionedMessages),
       error: "",
     } as ConsumerResponse);
   } catch (e: any) {
@@ -209,4 +209,15 @@ function createStatusSuccessfulMessage(
   }
 
   return resultMessage;
+}
+
+function orderMessagesDesc(
+  partitionedMessages: PartitionedMessages[]
+): PartitionedMessages[] {
+  return partitionedMessages.map((partition) => {
+    partition.messages = partition.messages.sort((a, b) => {
+      return b.timestamp - a.timestamp;
+    });
+    return partition;
+  });
 }
