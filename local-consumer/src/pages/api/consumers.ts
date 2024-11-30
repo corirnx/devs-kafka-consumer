@@ -127,7 +127,7 @@ export function handleConsumedMessage(
     return addMessageToNewPartition(consumedMessage, partitionedMessages);
   }
 
-  const existingMessages = partitionedMessages[partitionIndex].data;
+  const existingMessages = partitionedMessages[partitionIndex].messages;
   const index = existingMessages.findLastIndex(
     (msg) => msg.key === consumedMessage.key
   );
@@ -167,7 +167,7 @@ function handleExistingMessage(
     (msg) => msg.key !== consumedMessage.key
   );
   reducesMessages.push(consumedMessage);
-  partitionedMessages[partitionIndex].data = reducesMessages;
+  partitionedMessages[partitionIndex].messages = reducesMessages;
   return partitionedMessages;
 }
 
@@ -187,7 +187,7 @@ function addMessageToNewPartition(
 ): PartitionedMessages[] {
   const partitionMessages: PartitionedMessages = {
     partition: consumedMessage.partition,
-    data: [consumedMessage],
+    messages: [consumedMessage],
   };
   partitionedMessages.push(partitionMessages);
   return partitionedMessages;
@@ -198,6 +198,6 @@ function addNewMessage(
   partitionedMessages: PartitionedMessages[],
   partitionIndex: number
 ): PartitionedMessages[] {
-  partitionedMessages[partitionIndex].data.push(consumedMessage);
+  partitionedMessages[partitionIndex].messages.push(consumedMessage);
   return partitionedMessages;
 }

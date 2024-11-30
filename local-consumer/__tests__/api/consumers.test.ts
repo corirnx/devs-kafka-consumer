@@ -71,14 +71,14 @@ describe("ensureLatestMessage", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].partition).toBe(0);
-    expect(result[0].data).toContainEqual(consumedMessage);
+    expect(result[0].messages).toContainEqual(consumedMessage);
   });
 
   it("should add a new message if the message key does not exist in the partition", () => {
     const partitionedMessages: PartitionedMessages[] = [
       {
         partition: 0,
-        data: [
+        messages: [
           {
             key: "key1",
             timestamp: 1000,
@@ -103,15 +103,15 @@ describe("ensureLatestMessage", () => {
 
     const result = handleConsumedMessage(partitionedMessages, consumedMessage);
 
-    expect(result[0].data).toHaveLength(2);
-    expect(result[0].data).toContainEqual(consumedMessage);
+    expect(result[0].messages).toHaveLength(2);
+    expect(result[0].messages).toContainEqual(consumedMessage);
   });
 
   it("should update the existing message if the new message has a later timestamp", () => {
     const partitionedMessages: PartitionedMessages[] = [
       {
         partition: 0,
-        data: [
+        messages: [
           {
             key: "key1",
             timestamp: 1000,
@@ -136,15 +136,15 @@ describe("ensureLatestMessage", () => {
 
     const result = handleConsumedMessage(partitionedMessages, consumedMessage);
 
-    expect(result[0].data).toHaveLength(1);
-    expect(result[0].data[0]).toEqual(consumedMessage);
+    expect(result[0].messages).toHaveLength(1);
+    expect(result[0].messages[0]).toEqual(consumedMessage);
   });
 
   it("should not update the existing message if the new message has an earlier timestamp", () => {
     const partitionedMessages: PartitionedMessages[] = [
       {
         partition: 0,
-        data: [
+        messages: [
           {
             key: "key1",
             timestamp: 2000,
@@ -169,8 +169,8 @@ describe("ensureLatestMessage", () => {
 
     const result = handleConsumedMessage(partitionedMessages, consumedMessage);
 
-    expect(result[0].data).toHaveLength(1);
-    expect(result[0].data[0]).toEqual(partitionedMessages[0].data[0]);
+    expect(result[0].messages).toHaveLength(1);
+    expect(result[0].messages[0]).toEqual(partitionedMessages[0].messages[0]);
   });
 });
 

@@ -20,12 +20,7 @@ export interface ConsumedMessage {
   message: Record<string, unknown>;
 }
 
-// export interface ConsumerResponse {
-//   status: string;
-//   data?: ConsumedMessage[];
-//   error: string;
-// }
 export interface PartitionedMessages {
   partition: number;
-  data: ConsumedMessage[];
+  messages: ConsumedMessage[];
 }
