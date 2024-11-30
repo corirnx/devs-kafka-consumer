@@ -33,8 +33,7 @@ const PagingNavigation: React.FC<PagingNavigationProps> = ({ pagingTitle, totalI
                 role='paging-left'
                 onClick={handlePreviousPage}
                 disabled={currentPage === 1}
-                className="px-4 py-2 bg-green-300 hover:bg-green-200 text-black rounded disabled:opacity-50"
-            >
+                className="px-4 py-2 bg-green-300 hover:bg-green-200 text-black rounded disabled:opacity-50">
                 <ArrowLeftIcon className="h-5 w-5" />
             </button>
             <span className="text-white">
@@ -44,8 +43,7 @@ const PagingNavigation: React.FC<PagingNavigationProps> = ({ pagingTitle, totalI
                 role='paging-right'
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-green-300 hover:bg-green-200 text-black rounded disabled:opacity-50"
-            >
+                className="px-4 py-2 bg-green-300 hover:bg-green-200 text-black rounded disabled:opacity-50">
                 <ArrowRightIcon className="h-5 w-5" />
             </button>
         </div>

@@ -4,9 +4,9 @@ interface TableColumnCellProps {
     columnValue: React.ReactNode;
 }
 
-const TableColumnCell: React.FC<TableColumnCellProps> = ({ columnValue: value }) => {
+const TableColumnCell: React.FC<TableColumnCellProps> = ({ columnValue }) => {
     return (
-        <td className="px-6 py-4 whitespace-nowrap">{value}</td>
+        <td className="px-6 py-4 whitespace-nowrap">{columnValue}</td>
     );
 };
 

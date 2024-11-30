@@ -9,7 +9,7 @@ interface MessagesTableProps {
     partition: PartitionedMessages;
 }
 
-const MessagesTable: React.FC<MessagesTableProps> = ({ partition: data }) => {
+const MessagesTable: React.FC<MessagesTableProps> = ({ partition }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -18,7 +18,7 @@ const MessagesTable: React.FC<MessagesTableProps> = ({ partition: data }) => {
     };
 
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const selectedMessages = data.messages.slice(startIndex, startIndex + itemsPerPage);
+    const selectedMessages = partition.messages.slice(startIndex, startIndex + itemsPerPage);
 
     return (
         <div>
@@ -46,8 +46,8 @@ const MessagesTable: React.FC<MessagesTableProps> = ({ partition: data }) => {
                                 <CollapsibleJsonItem data={item.message} />
                             } />
                             <TableColumnCell columnValue={
-                                <CollapsibleJsonItem data={item.header} />
-                            } />                            
+                                <CollapsibleJsonItem data={item.header || {}} />
+                            } />
                             <TableColumnCell columnValue={item.offset} />
                             <TableColumnCell columnValue={item.size} />
                         </tr>
@@ -56,7 +56,7 @@ const MessagesTable: React.FC<MessagesTableProps> = ({ partition: data }) => {
             </table>
             <PagingNavigation
                 pagingTitle={"Messages Page"}
-                totalItems={data.messages.length}
+                totalItems={partition.messages.length}
                 itemsPerPage={itemsPerPage}
                 onPageChange={handlePageChange} />
         </div>

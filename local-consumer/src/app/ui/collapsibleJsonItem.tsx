@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
 interface CollapsibleJsonItemProps {
-    data: Record<string, any> | undefined;
+    data: Record<string, any>;
 }
 
 const CollapsibleJsonItem: React.FC<CollapsibleJsonItemProps> = ({ data }) => {
@@ -12,7 +12,7 @@ const CollapsibleJsonItem: React.FC<CollapsibleJsonItemProps> = ({ data }) => {
         setCollapsed(!collapsed);
     };
 
-    if (data === undefined || Object.keys(data).length === 0) {
+    if (!data || Object.keys(data).length === 0) {
         console.log('data is undefined or empty');
         return (<></>);
     }
@@ -39,7 +39,7 @@ const CollapsibleJsonItem: React.FC<CollapsibleJsonItemProps> = ({ data }) => {
             </div>
             {!collapsed && (
                 <pre className="whitespace-pre-wrap">
-                    {JSON.stringify(data, null, 2)}
+                    {jsonString}
                 </pre>
             )}
         </div>
