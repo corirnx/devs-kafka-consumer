@@ -10,6 +10,9 @@ This test project is offering a local kafka topic consumer
 - [dotenv](https://github.com/motdotla/dotenv)
 - [pnpm](https://pnpm.io/)
 
+## requirements
+- pnpm
+
 ## usage
 1. create a `.env` file containing:
    - KAFKA_CLIENT_ID, 
