@@ -38,7 +38,7 @@ describe('MessagesTable', () => {
         renderComponent();
         const headers = screen.getAllByRole('columnheader');
         expect(headers).toHaveLength(8);
-        expect(headers[0]).toHaveTextContent(/id/i);
+        expect(headers[0]).toHaveTextContent(/no./i);
         expect(headers[1]).toHaveTextContent(/partition/i);
         expect(headers[2]).toHaveTextContent(/key/i);
         expect(headers[3]).toHaveTextContent(/timestamp/i);

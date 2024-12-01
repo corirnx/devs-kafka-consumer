@@ -25,7 +25,7 @@ const MessagesTable: React.FC<MessagesTableProps> = ({ partition }) => {
             <table className="min-w-full divide-y divide-gray-200">
                 <thead>
                     <tr>
-                        <TableHeaderCell headerTitle={"id"} />
+                        <TableHeaderCell headerTitle={"no."} />
                         <TableHeaderCell headerTitle={"partition"} />
                         <TableHeaderCell headerTitle={"key"} />
                         <TableHeaderCell headerTitle={"timestamp"} />
